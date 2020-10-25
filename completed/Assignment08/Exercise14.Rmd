@@ -1,0 +1,133 @@
+---
+title: "Exerise14_AyachitMadhukar"
+output:
+  pdf_document: default
+  html_document.pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Exercise 14
+
+```{r echo=TRUE}
+
+setwd("~/MadR/Workspaces/dsc520")
+
+
+```
+
+### Loading data from file 
+
+```{r}
+data=read.csv("data/binary-classifier-data.csv")
+
+```
+
+### Observations at first glance  
+```{r}
+#Normalization
+summary(data)
+str(data)
+head(data)
+
+```
+
+### Randomization 
+```{r}
+
+set.seed(9850)
+gp<-runif(nrow(data))
+data<-data[order(gp),]
+head(data)  
+
+```
+
+### Normalization 
+
+```{r}
+normalize<-function(x){
+  return (
+            (x - min(x))/max(x)-min(x)
+         )
+}
+data.n<-as.data.frame(lapply(data[,c(2:3)], normalize))
+
+str(data.n)
+summary(data.n)
+```
+### Preparing training/testing models 
+
+```{r}
+
+r<-round(0.8*nrow(data.n))
+l<-nrow(data.n)
+
+data.train<-data.n[1:r,]
+data.test<-data.n[r:l,]
+
+data.train.target<-data[1:r,1]
+data.test.target<-data[r:l,1]
+
+
+```
+## Logistic regression
+```{r}
+
+library(caTools)
+
+split<- sample.split(data,SplitRatio=.8)
+
+train<-subset(data,split=="TRUE")
+test<-subset(data,split=="FALSE")
+
+GLM.1 <- glm(train$label ~ ., family=binomial(), data=train)
+summary(GLM.1)
+
+res<-predict(GLM.1,test,type="response")
+res<-predict(GLM.1,train,type="response")
+
+conffmatrix<- table(actual_value=train$label,Predicted_value=res>0.5)
+
+conffmatrix
+
+acc<-(conffmatrix[1,1] + conffmatrix[2,2])/(conffmatrix[1,1] + conffmatrix[2,2] + conffmatrix[2,1]+ conffmatrix[1,2])*100
+
+
+
+```
+
+## KNN Classifire
+### Determining k value 
+```{r}
+ k_value<-round(sqrt(nrow(data)))
+```
+
+### Predicting knn and accuracy
+
+```{r}
+library("class")
+
+knn.39<- knn(train = data.train, test=data.test,cl=data.train.target, k=k_value)
+ACC.39<-100 * sum( data.test.target == knn.39) / NROW(data.test.target)
+                                                     
+table(data.test.target,knn.39)
+
+ACC.39
+knn.39<- knn(train = data.train, test=data.test,cl=data.train.target, k=k_value)
+
+
+```
+## Conclusion 
+
+### a. What is the accuracy of the logistic regression classifier? 
+>*logistic regression shows close to `r ACC.39` accuracy*  
+
+### b. How does the accuracy of the logistic regression classifier compare to the nearest neighbors algorithm?
+>*logistic regression is way off from KNN whch is nearly `r acc`% vs KNN being `r ACC.39`% accurate* 
+
+### c. Why is the accuracy of the logistic regression classifier different from that of the nearest neighbors?
+>**** 
+
+
